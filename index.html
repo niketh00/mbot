@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz Competition</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0f17;--panel:#121826;--panel2:#182033;--line:#243049;--text:#e8edf7;--muted:#8a96ad;--blue:#4c8dff;--blue-soft:rgba(76,141,255,.14);--green:#34d399;--green-soft:rgba(52,211,153,.16);--red:#f87171;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body,#root{height:100%;margin:0}
+body{background:radial-gradient(1200px 600px at 50% -10%,#16203a 0,var(--bg) 60%);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+.app{height:100%;display:flex;flex-direction:column;padding:clamp(10px,2vh,22px) clamp(12px,3vw,40px);gap:clamp(8px,2vh,22px)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-weight:700;letter-spacing:.14em;font-size:clamp(11px,1.4vw,15px);color:var(--muted);text-transform:uppercase;min-width:170px}
+.prog{display:flex;align-items:center;gap:10px}
+.dots{display:flex;gap:8px}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--line);transition:all .4s}
+.dot.done{background:var(--muted)}
+.dot.cur{background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.14);transform:scale(1.15)}
+.rlabel{font-size:clamp(12px,1.4vw,16px);color:var(--muted);font-variant-numeric:tabular-nums}
+.tools{display:flex;gap:8px;min-width:170px;justify-content:flex-end}
+.btn{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;transition:background .2s,border-color .2s}
+.btn:hover{background:var(--panel2);border-color:#3a4a6b}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#07101f;font-weight:600}
+.btn.primary:hover{filter:brightness(1.1);background:var(--blue)}
+.btn.danger{color:var(--red)}
+.btn.ghost{opacity:.55}.btn.ghost:hover{opacity:1}
+.btn:disabled{opacity:.35;cursor:default}
+.timerwrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto}
+.ring{position:relative;width:clamp(110px,20vh,190px);height:clamp(110px,20vh,190px)}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(48px,10vh,96px);font-weight:700;font-variant-numeric:tabular-nums;transition:color .3s}
+.ring .num.low{color:var(--red)}
+.status{margin-top:4px;font-size:clamp(11px,1.5vh,14px);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);height:18px}
+.status.ok{color:var(--green)}
+.groups{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2.5vw,36px)}
+.panel{--acc:var(--blue);--soft:var(--blue-soft);background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--acc);border-radius:16px;padding:clamp(14px,2.5vh,30px) clamp(14px,2.2vw,34px);display:flex;flex-direction:column;gap:clamp(10px,2.5vh,28px);min-height:0;animation:rise .55s ease both}
+.panel.b{--acc:var(--green);--soft:var(--green-soft)}
+.ghead{font-weight:700;letter-spacing:.2em;color:var(--acc);font-size:clamp(13px,2.2vh,20px)}
+.q{font-size:clamp(20px,3.6vh,38px);line-height:1.25;font-weight:600;flex:0 1 auto}
+.opts{display:flex;flex-direction:column;gap:clamp(8px,2vh,18px);margin-top:auto}
+.opt{display:flex;align-items:center;gap:16px;border:1.5px solid var(--line);background:var(--panel2);border-radius:12px;padding:clamp(12px,2.4vh,24px) clamp(12px,1.6vw,22px);font-size:clamp(17px,3vh,30px);transition:background .5s,border-color .5s,transform .5s,opacity .5s,box-shadow .5s}
+.badge{flex:none;width:clamp(32px,5vh,50px);height:clamp(32px,5vh,50px);border-radius:10px;display:grid;place-items:center;font-weight:700;background:var(--soft);color:var(--acc);transition:all .5s}
+.opt.correct{background:rgba(52,211,153,.2);border-color:var(--green);transform:scale(1.015);box-shadow:0 0 0 1px var(--green),0 0 28px rgba(52,211,153,.25)}
+.opt.correct .badge{background:var(--green);color:#052e1f}
+.opt.wrong{opacity:.4}
+.tick{margin-left:auto;color:var(--green);font-weight:700;animation:pop .5s ease both}
+.hint{text-align:center;color:var(--muted);font-size:clamp(11px,1.6vh,14px);height:20px;letter-spacing:.04em}
+.hint kbd{border:1px solid var(--line);border-radius:5px;padding:1px 8px;background:var(--panel);color:var(--text)}
+.hint.show{animation:fade .6s ease both}
+.done{flex:1;display:grid;place-items:center;text-align:center}
+.done h1{font-size:clamp(34px,7vh,72px);margin:0 0 10px}
+.done p{color:var(--muted);font-size:clamp(14px,2.4vh,22px);margin:0 0 24px}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.overlay{position:fixed;inset:0;background:rgba(5,8,14,.72);backdrop-filter:blur(3px);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .2s}
+.modal{width:min(980px,100%);max-height:92vh;background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap}
+.mh h2{margin:0;font-size:16px}
+.mb{display:grid;grid-template-columns:200px 1fr;min-height:0;flex:1;overflow:hidden}
+.rl{border-right:1px solid var(--line);overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.ri{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 10px;cursor:pointer;font-size:13px}
+.ri.sel{border-color:var(--blue);background:var(--blue-soft)}
+.ri span{flex:1}
+.mini{background:none;border:none;color:var(--muted);cursor:pointer;padding:3px 5px;border-radius:5px;font-size:13px}
+.mini:hover:not(:disabled){background:var(--panel2);color:var(--text)}.mini:disabled{opacity:.25;cursor:default}
+.ed{overflow:auto;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+.eg{border:1px solid var(--line);border-top:3px solid var(--blue);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.eg.b{border-top-color:var(--green)}
+.eg h3{margin:0;font-size:12px;letter-spacing:.15em;color:var(--blue)}.eg.b h3{color:var(--green)}
+label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+input[type=text],textarea,select{background:#0c121e;border:1px solid var(--line);color:var(--text);border-radius:7px;padding:8px 9px;font:inherit;font-size:14px;width:100%}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--blue);outline-offset:-1px}
+textarea{resize:vertical;min-height:64px}
+.mf{display:flex;gap:8px;align-items:center;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.mf .msg{color:var(--green);font-size:13px;margin-right:auto}.mf .msg.err{color:var(--red)}
+@media (max-width:760px){.groups{grid-template-columns:1fr;overflow:auto}.mb{grid-template-columns:1fr}.rl{flex-direction:row;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}.ed{grid-template-columns:1fr}.brand{display:none}body{overflow:auto}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+const {useState,useEffect,useRef,useCallback}=React;
+const h=React.createElement;
+const DURATION=10, KEY="quizcomp.questions.v1";
+
+const mk=(q,A,B,c)=>({q,A,B,correct:c});
+const DEFAULTS=[
+ {a:mk("Which planet is known as the Red Planet?","Mars","Venus","A"),b:mk("What is the largest ocean on Earth?","Atlantic","Pacific","B")},
+ {a:mk("How many continents are there?","Seven","Six","A"),b:mk("Which gas do plants absorb from the air?","Oxygen","Carbon dioxide","B")},
+ {a:mk("What is the capital of Japan?","Osaka","Tokyo","B"),b:mk("Who painted the Mona Lisa?","Leonardo da Vinci","Michelangelo","A")},
+ {a:mk("What is 9 × 7?","63","56","A"),b:mk("Which is the fastest land animal?","Lion","Cheetah","B")},
+ {a:mk("Water boils at what temperature at sea level?","100 °C","90 °C","A"),b:mk("Which language has the most native speakers?","English","Mandarin Chinese","B")},
+ {a:mk("What is the chemical symbol for gold?","Ag","Au","B"),b:mk("How many players are on a football (soccer) team on the pitch?","11","9","A")}
+];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const validGroup=g=>g&&typeof g.q==="string"&&typeof g.A==="string"&&typeof g.B==="string"&&(g.correct==="A"||g.correct==="B");
+const validData=d=>Array.isArray(d)&&d.length>0&&d.every(r=>r&&validGroup(r.a)&&validGroup(r.b));
+function load(){try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);if(validData(d))return d}}catch(e){}return clone(DEFAULTS)}
+function persist(d){try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){return false}}
+
+function Timer({left}){
+  const R=70,C=2*Math.PI*R, off=C*(1-left/DURATION), low=left<=3&&left>0;
+  return h("div",{className:"ring"},
+    h("svg",{viewBox:"0 0 160 160"},
+      h("circle",{cx:80,cy:80,r:R,fill:"none",stroke:"#243049",strokeWidth:8}),
+      h("circle",{cx:80,cy:80,r:R,fill:"none",stroke:low||left===0?"#f87171":"#4c8dff",strokeWidth:8,strokeLinecap:"round",strokeDasharray:C,strokeDashoffset:off,style:{transition:"stroke-dashoffset 1s linear,stroke .3s"}})),
+    h("div",{className:"num"+(low?" low":"")},left));
+}
+
+function Panel({g,data,revealed}){
+  const id=g==="A"?"a":"b";
+  const opt=k=>{
+    const cls="opt"+(revealed?(data.correct===k?" correct":" wrong"):"");
+    return h("div",{className:cls},h("div",{className:"badge"},k),h("span",null,data[k]),revealed&&data.correct===k?h("span",{className:"tick"},"✓"):null);
+  };
+  return h("section",{className:"panel "+id},
+    h("div",{className:"ghead"},"GROUP "+g),
+    h("div",{className:"q"},data.q),
+    h("div",{className:"opts"},opt("A"),opt("B")));
+}
+
+function Editor({questions,startRound,onSave,onClose}){
+  const [draft,setDraft]=useState(()=>clone(questions));
+  const [sel,setSel]=useState(Math.min(startRound,questions.length-1));
+  const [msg,setMsg]=useState(null);
+  const fileRef=useRef(null);
+  const upd=(grp,field,val)=>setDraft(d=>{const n=clone(d);n[sel][grp][field]=val;return n});
+  const move=(i,dir)=>setDraft(d=>{const n=clone(d),j=i+dir;[n[i],n[j]]=[n[j],n[i]];return n}) ;
+  const moveSel=(i,dir)=>{move(i,dir);setSel(i+dir)};
+  const add=()=>{setDraft(d=>[...d,{a:mk("","Option A","Option B","A"),b:mk("","Option A","Option B","A")}]);setSel(draft.length)};
+  const remove=i=>{if(draft.length<=1){setMsg({e:1,t:"At least one round is required."});return}
+    setDraft(d=>d.filter((_,k)=>k!==i));setSel(s=>Math.max(0,Math.min(s>i?s-1:s,draft.length-2)))};
+  const save=()=>{const ok=persist(draft);onSave(draft);setMsg(ok?{t:"Saved ✓"}:{e:1,t:"Applied, but browser storage is unavailable."})};
+  const exp=()=>{const b=new Blob([JSON.stringify(draft,null,2)],{type:"application/json"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="quiz-questions.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+  const imp=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+    const r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(d&&!Array.isArray(d)&&Array.isArray(d.rounds))d=d.rounds;
+      if(!validData(d))throw 0;setDraft(d);setSel(0);setMsg({t:"Imported "+d.length+" rounds. Press Save Changes to apply."})}catch(x){setMsg({e:1,t:"Invalid quiz JSON file."})}};r.readAsText(f)};
+  const cur=draft[sel]||draft[0];
+  const form=(grp,title,cls)=>h("div",{className:"eg "+cls},h("h3",null,title),
+    h("label",null,"Question",h("textarea",{value:cur[grp].q,onChange:e=>upd(grp,"q",e.target.value)})),
+    h("label",null,"Option A",h("input",{type:"text",value:cur[grp].A,onChange:e=>upd(grp,"A",e.target.value)})),
+    h("label",null,"Option B",h("input",{type:"text",value:cur[grp].B,onChange:e=>upd(grp,"B",e.target.value)})),
+    h("label",null,"Correct answer",h("select",{value:cur[grp].correct,onChange:e=>upd(grp,"correct",e.target.value)},h("option",{value:"A"},"A"),h("option",{value:"B"},"B"))));
+  return h("div",{className:"overlay",onMouseDown:e=>{if(e.target===e.currentTarget)onClose()}},
+    h("div",{className:"modal",role:"dialog","aria-label":"Edit questions"},
+      h("div",{className:"mh"},h("h2",null,"Edit Questions"),
+        h("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},
+          h("button",{className:"btn",onClick:exp},"Export Questions"),
+          h("button",{className:"btn",onClick:()=>fileRef.current&&fileRef.current.click()},"Import Questions"),
+          h("input",{ref:fileRef,type:"file",accept:"application/json,.json",style:{display:"none"},onChange:imp}),
+          h("button",{className:"btn",onClick:onClose},"Close"))),
+      h("div",{className:"mb"},
+        h("div",{className:"rl"},
+          draft.map((_,i)=>h("div",{key:i,className:"ri"+(i===sel?" sel":""),onClick:()=>setSel(i)},
+            h("span",null,"Round "+(i+1)),
+            h("button",{className:"mini",disabled:i===0,title:"Move up",onClick:e=>{e.stopPropagation();moveSel(i,-1)}},"↑"),
+            h("button",{className:"mini",disabled:i===draft.length-1,title:"Move down",onClick:e=>{e.stopPropagation();moveSel(i,1)}},"↓"),
+            h("button",{className:"mini",title:"Remove round",onClick:e=>{e.stopPropagation();remove(i)}},"✕"))),
+          h("button",{className:"btn",onClick:add},"+ Add round")),
+        h("div",{className:"ed"},form("a","GROUP A","a"),form("b","GROUP B","b"))),
+      h("div",{className:"mf"},
+        h("span",{className:"msg"+(msg&&msg.e?" err":"")},msg?msg.t:""),
+        h("button",{className:"btn primary",onClick:save},"Save Changes"))));
+}
+
+function App(){
+  const [questions,setQuestions]=useState(load);
+  const [round,setRound]=useState(0);
+  const [left,setLeft]=useState(DURATION);
+  const [revealed,setRevealed]=useState(false);
+  const [finished,setFinished]=useState(false);
+  const [editing,setEditing]=useState(false);
+  const [fs,setFs]=useState(false);
+  const st=useRef({});st.current={revealed,finished,editing,round,total:questions.length};
+  const lock=useRef(false);
+
+  // single countdown: paused while editor open, revealed, or finished
+  useEffect(()=>{
+    if(finished||revealed||editing)return;
+    const id=setInterval(()=>setLeft(t=>t>0?t-1:0),1000);
+    return()=>clearInterval(id);
+  },[finished,revealed,editing,round]);
+  // single reveal event for both groups
+  useEffect(()=>{if(left===0&&!revealed&&!finished&&!editing)setRevealed(true)},[left,revealed,finished,editing]);
+
+  const advance=useCallback(()=>{
+    const s=st.current;
+    if(s.editing||s.finished||!s.revealed)return;
+    if(s.round>=s.total-1){setFinished(true);return}
+    setRound(s.round+1);setLeft(DURATION);setRevealed(false);
+  },[]);
+  const restart=()=>{setRound(0);setLeft(DURATION);setRevealed(false);setFinished(false)};
+
+  useEffect(()=>{
+    const typing=el=>el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)||el.isContentEditable);
+    const down=e=>{
+      if(e.code!=="Space"&&e.key!==" ")return;
+      if(st.current.editing||typing(e.target))return; // let the editor receive spaces
+      e.preventDefault();
+      if(e.repeat||lock.current)return;
+      lock.current=true;setTimeout(()=>{lock.current=false},500);
+      if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+      advance();
+    };
+    const up=e=>{if((e.code==="Space"||e.key===" ")&&!st.current.editing&&!typing(e.target))e.preventDefault()};
+    window.addEventListener("keydown",down);window.addEventListener("keyup",up);
+    return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up)};
+  },[advance]);
+
+  useEffect(()=>{
+    const f=()=>setFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange",f);return()=>document.removeEventListener("fullscreenchange",f);
+  },[]);
+  useEffect(()=>{
+    if(!editing)return;
+    const k=e=>{if(e.key==="Escape")setEditing(false)};
+    window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k);
+  },[editing]);
+
+  const toggleFs=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}};
+  const onSave=d=>{setQuestions(d);if(round>d.length-1){setRound(d.length-1)}};
+
+  const total=questions.length, cur=questions[Math.min(round,total-1)];
+  const last=round>=total-1;
+  return h("div",{className:"app"},
+    h("div",{className:"top"},
+      h("div",{className:"brand"},"Quiz Competition"),
+      h("div",{className:"prog"},
+        h("div",{className:"dots"},questions.map((_,i)=>h("div",{key:i,className:"dot"+((finished||i<round)?" done":i===round?" cur":"")}))),
+        h("div",{className:"rlabel"},finished?"Complete":"Round "+(round+1)+" / "+total)),
+      h("div",{className:"tools"},
+        h("button",{className:"btn ghost",onClick:toggleFs},fs?"Exit fullscreen":"⛶ Fullscreen"),
+        h("button",{className:"btn ghost",onClick:()=>setEditing(true)},"Edit Questions"))),
+    finished
+      ? h("div",{className:"done"},h("div",null,
+          h("h1",null,"Quiz complete"),
+          h("p",null,"All "+total+" rounds finished. Thank you for playing!"),
+          h("button",{className:"btn",onClick:restart},"Restart quiz")))
+      : [
+        h("div",{className:"timerwrap",key:"t"},
+          h(Timer,{left}),
+          h("div",{className:"status"+(revealed?" ok":"")},revealed?"Answers revealed":editing?"Paused":"Time remaining")),
+        h("div",{className:"groups",key:"g"+round+"-"+questions.length},
+          h(Panel,{g:"A",data:cur.a,revealed}),
+          h(Panel,{g:"B",data:cur.b,revealed})),
+        h("div",{className:"hint"+(revealed?" show":""),key:"h"},
+          revealed?h(React.Fragment,null,"Press ",h("kbd",null,"Space"),last?" to finish":" for next round"):"")
+      ],
+    editing?h(Editor,{questions,startRound:round,onSave,onClose:()=>setEditing(false)}):null);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+</body>
+</html>
